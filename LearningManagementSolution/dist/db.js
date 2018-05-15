@@ -45,6 +45,20 @@ exports.Course = exports.db.define("course", {
         allowNull: false
     }
 });
+exports.StudentBatch = exports.db.define("studentbatch", {
+    id: {
+        type: sequelize_1.default.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+});
+exports.TeacherBatch = exports.db.define("teacherbatch", {
+    id: {
+        type: sequelize_1.default.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+});
 exports.Course.hasMany(exports.Batch);
 exports.Batch.belongsTo(exports.Course);
 exports.Course.hasMany(exports.Student);
@@ -59,10 +73,10 @@ exports.Teacher.hasMany(exports.Lecture);
 exports.Lecture.belongsTo(exports.Teacher);
 exports.Subject.hasMany(exports.Lecture);
 exports.Lecture.belongsTo(exports.Subject);
-exports.Batch.belongsToMany(exports.Student, { through: 'StudentBatch' });
-exports.Student.belongsToMany(exports.Batch, { through: 'StudentBatch' });
-exports.Batch.belongsToMany(exports.Teacher, { through: 'TeacherBatches' });
-exports.Teacher.belongsToMany(exports.Batch, { through: 'TeacherBatches' });
+exports.Batch.belongsToMany(exports.Student, { through: exports.StudentBatch });
+exports.Student.belongsToMany(exports.Batch, { through: exports.StudentBatch });
+exports.Batch.belongsToMany(exports.Teacher, { through: exports.TeacherBatch });
+exports.Teacher.belongsToMany(exports.Batch, { through: exports.TeacherBatch });
 exports.db
     .sync({ alter: true })
     .then(() => console.log("Database has been syned "))

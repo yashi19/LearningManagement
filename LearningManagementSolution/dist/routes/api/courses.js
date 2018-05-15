@@ -31,7 +31,7 @@ route.get("/:id", (req, res) => {
     let courseId = parseInt(req.params.id);
     if (isNaN(courseId)) {
         return res.status(403).send({
-            error: 'Course Id is not a valid number'
+            error: "Course Id is not a valid number"
         });
     }
     db_1.Course.findById(courseId)
@@ -54,7 +54,7 @@ route.put("/:id", (req, res) => {
             id: courseId
         }
     })
-        .then((courses) => {
+        .then(courses => {
         if (courses[0] < 1) {
             return res.status(500).send("No such course found");
         }
@@ -71,7 +71,7 @@ route.delete("/:id", (req, res) => {
             id: courseId
         }
     })
-        .then((rowsUpdated) => {
+        .then(rowsUpdated => {
         if (rowsUpdated < 1) {
             return res.status(500).send("No such course found");
         }
@@ -145,11 +145,11 @@ route.get("/:courseId/batches/:batchId", (req, res) => {
         db_1.Batch.findById(batchId)
             .then(batch => {
             if (!batch)
-                return res.status(500).send('No batch found with id : ' + batchId);
+                return res.status(500).send("No batch found with id : " + batchId);
             res.status(200).send(batch);
         })
             .catch(error => {
-            res.status(500).send('Error in getting batch');
+            res.status(500).send("Error in getting batch");
         });
     });
 });
@@ -171,19 +171,21 @@ route.get("/:courseId/batches/:batchId/lectures", (req, res) => {
             id: batchId,
             courseId: courseId
         }
-    })
-        .then(batches => {
+    }).then(batches => {
         if (!batches)
-            return res.status(500).send('There are no such batches with id ' + batchId);
+            return res
+                .status(500)
+                .send("There are no such batches with id " + batchId);
         db_1.Lecture.findAll({
             where: {
                 batchId: batchId
             }
-        }).then(lectures => {
+        })
+            .then(lectures => {
             res.status(200).send(lectures);
         })
             .catch(error => {
-            res.status(500).send('Error in finding lectures');
+            res.status(500).send("Error in finding lectures");
         });
     });
 });
@@ -194,7 +196,7 @@ route.post("/:courseId/batches/:batchId/lectures", (req, res) => {
     let teacherId = req.body.teacherId;
     if (!req.body.name) {
         return res.status(403).send({
-            error: 'Please enter the lecture name'
+            error: "Please enter the lecture name"
         });
     }
     if (isNaN(courseId)) {
@@ -219,7 +221,7 @@ route.post("/:courseId/batches/:batchId/lectures", (req, res) => {
     }).then((subject) => {
         if (!subject) {
             res.status(404).send({
-                error: 'Could not find subject with id: ' + subjectId
+                error: "Could not find subject with id: " + subjectId
             });
         }
         else {
@@ -230,7 +232,7 @@ route.post("/:courseId/batches/:batchId/lectures", (req, res) => {
             }).then(teacher => {
                 if (!teacher) {
                     res.status(404).send({
-                        error: 'Could not find teacher with id: ' + teacherId
+                        error: "Could not find teacher with id: " + teacherId
                     });
                 }
                 else {
@@ -239,10 +241,12 @@ route.post("/:courseId/batches/:batchId/lectures", (req, res) => {
                         batchId: batchId,
                         subjectId: subjectId,
                         teacherId: teacherId
-                    }).then((lecture) => {
+                    })
+                        .then(lecture => {
                         res.status(201).send(lecture);
-                    }).catch(error => {
-                        res.status(500).send('Error in creating lecture');
+                    })
+                        .catch(error => {
+                        res.status(500).send("Error in creating lecture");
                     });
                 }
             });
@@ -268,23 +272,23 @@ route.get("/:courseId/batches/:batchId/lectures/:lectureId", (req, res) => {
             error: "Lecture Id is not a valid number"
         });
     }
-    db_1.Course.findById(courseId).then(course => {
-        if (!course) {
-            return res.send({
-                error: 'There is no such course with id' + courseId
-            });
-        }
-        db_1.Lecture.findOne({
-            where: {
-                id: lectureId,
-                batchId: batchId
-            }
-        }).then(lecture => {
+    db_1.Lecture.findOne({
+        where: {
+            id: lectureId,
+            batchId: batchId
+        },
+        include: [{ model: db_1.Batch }]
+    })
+        .then((lecture) => {
+        if (lecture.batch.courseId == courseId)
             res.status(200).send(lecture);
-        })
-            .catch(error => {
-            res.status(500).send('Error in finding lecture');
-        });
+        else
+            return res.send({
+                error: "There is no such course with id " + courseId
+            });
+    })
+        .catch(error => {
+        res.status(500).send("Error in finding lecture");
     });
 });
 route.get("/:courseId/batches/:batchId/students", (req, res) => {
@@ -300,5 +304,37 @@ route.get("/:courseId/batches/:batchId/students", (req, res) => {
             error: "Batch Id is not a valid number"
         });
     }
+    db_1.Batch.findAll({
+        where: {
+            id: batchId,
+            courseId: courseId
+        },
+        include: [{ model: db_1.Student }]
+    }).then(studentBatches => {
+        res.status(200).send(studentBatches);
+    });
+});
+route.get("/:courseId/batches/:batchId/teachers", (req, res) => {
+    let courseId = parseInt(req.params.courseId);
+    let batchId = parseInt(req.params.batchId);
+    if (isNaN(courseId)) {
+        return res.status(403).send({
+            error: "Course Id is not a valid number"
+        });
+    }
+    if (isNaN(batchId)) {
+        return res.status(403).send({
+            error: "Batch Id is not a valid number"
+        });
+    }
+    db_1.Batch.findAll({
+        where: {
+            id: batchId,
+            courseId: courseId
+        },
+        include: [{ model: db_1.Teacher }]
+    }).then(teacherBatches => {
+        res.status(200).send(teacherBatches);
+    });
 });
 exports.default = route;

@@ -6,6 +6,8 @@ import { LectureModel } from './models/Lecture';
 import { StudentModel } from './models/Student';
 import { SubjectModel }  from './models/Subject';
 import { TeacherModel } from './models/Teacher';
+import { StudentBatchModel } from './models/StudentBatch';
+import { TeacherBatchModel } from './models/TeacherBatch';
 
 
 export const db = new Sequelize(DB.DATABASE, DB.USERNAME, DB.PASSWORD, {
@@ -62,6 +64,26 @@ export const Lecture = db.define<LectureModel,any>("lecture", {
   });
 
 
+  export const StudentBatch = db.define<StudentBatchModel,any>("studentbatch", {
+    id: {
+      type: Sequelize.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+  
+  });
+
+  export const TeacherBatch = db.define<TeacherBatchModel,any>("teacherbatch", {
+    id: {
+      type: Sequelize.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+
+    
+  });
+
+
 
 Course.hasMany(Batch);
 Batch.belongsTo(Course);
@@ -85,12 +107,12 @@ Lecture.belongsTo(Teacher);
 Subject.hasMany(Lecture);
 Lecture.belongsTo(Subject);
 
-Batch.belongsToMany(Student, {through: 'StudentBatch'})
-Student.belongsToMany(Batch , {through: 'StudentBatch'}) 
+Batch.belongsToMany(Student, {through: StudentBatch})
+Student.belongsToMany(Batch , {through: StudentBatch}) 
 
 
-Batch.belongsToMany(Teacher, {through: 'TeacherBatches'})
-Teacher.belongsToMany(Batch , {through: 'TeacherBatches'}) 
+Batch.belongsToMany(Teacher, {through: TeacherBatch})
+Teacher.belongsToMany(Batch , {through: TeacherBatch}) 
 
 
  db
