@@ -5,20 +5,23 @@ import { TeacherModel } from "../../models/Teacher";
 const route: Router = Router();
 
 
-route.get("/", (req:Request, res:Response) => {
-  Teacher.findAll()
-    .then((teachers:TeacherModel[]) => {
+route.get("/", (req: Request, res: Response) => {
+  Teacher.findAll({
+    include: [
+      { model: Subject }
+    ]
+  })
+    .then((teachers: TeacherModel[]) => {
       res.status(200).send(teachers);
     })
-    .catch((error:Error) => {
+    .catch((error: Error) => {
       res.status(500).send({
         error: "Could not retrieve teachers"
       });
     });
 });
 
-
-route.post("/", (req:Request, res:Response) => {
+route.post("/", (req: Request, res: Response) => {
   let subjectId: number = parseInt(req.body.subjectId);
 
   if (isNaN(subjectId)) {
@@ -28,13 +31,15 @@ route.post("/", (req:Request, res:Response) => {
   }
 
   Subject.findById(subjectId).then(subject => {
-    if (!subject)
+    if (!subject) {
       return res.status(500).send("No Subject is present with id " + subjectId);
+    } else {
       Teacher.create({
         name: req.body.name,
-        subjectId:subjectId
       })
-        .then((teacher:TeacherModel) => {
+        .then((teacher: any) => {
+          teacher.setSubject(subject, { save: false })
+          teacher.save();
           res.status(201).send(teacher);
         })
         .catch((error: Error) => {
@@ -42,9 +47,10 @@ route.post("/", (req:Request, res:Response) => {
             error: "Error adding teacher"
           });
         });
-   
+    }
   });
 });
+
 
 route.get("/:id", (req:Request, res:Response) => {
 

@@ -12,7 +12,7 @@ import {
 import { CourseModel } from "../../models/Course";
 import { BatchModel } from "../../models/Batch";
 import { SubjectModel } from "../../models/Subject";
-import { all } from "bluebird";
+// import { all } from "bluebird";
 
 const route: Router = Router();
 
@@ -122,7 +122,7 @@ route.post("/:id/batches", (req: Request, res: Response) => {
 
     Batch.create({
       name: req.body.name,
-      year: req.body.year,
+      startDate: new Date(req.body.startDate),
       courseId: courseId
     })
       .then((batch: BatchModel) => {
@@ -145,11 +145,11 @@ route.get("/:id/batches", (req: Request, res: Response) => {
     });
   }
 
-  Course.findById(courseId).then(course => {
-    if (!course)
-      return res.status(500).send("No course is present with id : " + courseId);
-
-    Batch.findAll()
+    Batch.findAll({
+      where:{
+        courseId:courseId
+      }
+    })
       .then((batches: BatchModel[]) => {
         res.status(200).send(batches);
       })
@@ -159,7 +159,9 @@ route.get("/:id/batches", (req: Request, res: Response) => {
         });
       });
   });
-});
+
+
+
 
 route.get("/:courseId/batches/:batchId", (req: Request, res: Response) => {
   let courseId: number = parseInt(req.params.courseId);
@@ -177,11 +179,13 @@ route.get("/:courseId/batches/:batchId", (req: Request, res: Response) => {
     });
   }
 
-  Course.findById(courseId).then(course => {
-    if (!course)
-      return res.status(500).send("No course is present with id : " + courseId);
-
-    Batch.findById(batchId)
+  
+    Batch.findOne({
+      where:{
+        id:batchId,
+        courseId:courseId
+      }
+    })
       .then(batch => {
         if (!batch)
           return res.status(500).send("No batch found with id : " + batchId);
@@ -191,7 +195,7 @@ route.get("/:courseId/batches/:batchId", (req: Request, res: Response) => {
         res.status(500).send("Error in getting batch");
       });
   });
-});
+
 
 route.get(
   "/:courseId/batches/:batchId/lectures",
@@ -225,7 +229,8 @@ route.get(
       Lecture.findAll({
         where: {
           batchId: batchId
-        }
+        },
+        include:[{all:true}]
       })
         .then(lectures => {
           res.status(200).send(lectures);
@@ -294,8 +299,11 @@ route.post(
               batchId: batchId,
               subjectId: subjectId,
               teacherId: teacherId
+            },{
+              include:[{all:true}]
             })
               .then(lecture => {
+                
                 res.status(201).send(lecture);
               })
               .catch(error => {
@@ -380,6 +388,8 @@ route.get(
 
       include: [{ model:Student }]
     }).then(studentBatches => {
+      console.log(studentBatches);
+      
       res.status(200).send(studentBatches);
     });
   }

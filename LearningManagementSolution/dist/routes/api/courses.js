@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const db_1 = require("../../db");
+// import { all } from "bluebird";
 const route = express_1.Router();
 route.get("/", (req, res) => {
     db_1.Course.findAll()
@@ -92,7 +93,7 @@ route.post("/:id/batches", (req, res) => {
             return res.status(500).send("No course is present with id : " + courseId);
         db_1.Batch.create({
             name: req.body.name,
-            year: req.body.year,
+            startDate: new Date(req.body.startDate),
             courseId: courseId
         })
             .then((batch) => {
@@ -112,17 +113,17 @@ route.get("/:id/batches", (req, res) => {
             error: "Course Id is not a valid number"
         });
     }
-    db_1.Course.findById(courseId).then(course => {
-        if (!course)
-            return res.status(500).send("No course is present with id : " + courseId);
-        db_1.Batch.findAll()
-            .then((batches) => {
-            res.status(200).send(batches);
-        })
-            .catch((error) => {
-            res.status(500).send({
-                error: "Could not retrieve batches"
-            });
+    db_1.Batch.findAll({
+        where: {
+            courseId: courseId
+        }
+    })
+        .then((batches) => {
+        res.status(200).send(batches);
+    })
+        .catch((error) => {
+        res.status(500).send({
+            error: "Could not retrieve batches"
         });
     });
 });
@@ -139,18 +140,19 @@ route.get("/:courseId/batches/:batchId", (req, res) => {
             error: "Batch Id is not a valid number"
         });
     }
-    db_1.Course.findById(courseId).then(course => {
-        if (!course)
-            return res.status(500).send("No course is present with id : " + courseId);
-        db_1.Batch.findById(batchId)
-            .then(batch => {
-            if (!batch)
-                return res.status(500).send("No batch found with id : " + batchId);
-            res.status(200).send(batch);
-        })
-            .catch(error => {
-            res.status(500).send("Error in getting batch");
-        });
+    db_1.Batch.findOne({
+        where: {
+            id: batchId,
+            courseId: courseId
+        }
+    })
+        .then(batch => {
+        if (!batch)
+            return res.status(500).send("No batch found with id : " + batchId);
+        res.status(200).send(batch);
+    })
+        .catch(error => {
+        res.status(500).send("Error in getting batch");
     });
 });
 route.get("/:courseId/batches/:batchId/lectures", (req, res) => {
@@ -179,7 +181,8 @@ route.get("/:courseId/batches/:batchId/lectures", (req, res) => {
         db_1.Lecture.findAll({
             where: {
                 batchId: batchId
-            }
+            },
+            include: [{ all: true }]
         })
             .then(lectures => {
             res.status(200).send(lectures);
@@ -241,6 +244,8 @@ route.post("/:courseId/batches/:batchId/lectures", (req, res) => {
                         batchId: batchId,
                         subjectId: subjectId,
                         teacherId: teacherId
+                    }, {
+                        include: [{ all: true }]
                     })
                         .then(lecture => {
                         res.status(201).send(lecture);
@@ -311,6 +316,7 @@ route.get("/:courseId/batches/:batchId/students", (req, res) => {
         },
         include: [{ model: db_1.Student }]
     }).then(studentBatches => {
+        console.log(studentBatches);
         res.status(200).send(studentBatches);
     });
 });

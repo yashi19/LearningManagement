@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
-import { Student ,Batch} from "../../db";
+import { Student ,Batch, Course} from "../../db";
 import { StudentModel } from "../../models/Student";
+import { all } from "bluebird";
 
 const route: Router = Router();
 
@@ -41,7 +42,9 @@ route.get("/:id", (req:Request, res:Response) => {
     });
   }
 
-  Student.findById(studentId)
+  Student.findById(studentId,{
+    include:[{all:true}]
+  })
     .then((student: StudentModel | null) => {
       if (!student) {
         return res.status(500).send("No such student found");
@@ -98,6 +101,39 @@ route.get("/:id/batches",(req:Request,res:Response)=>{
     }
   });
 })
+
+
+route.post("/:studentId/batches/:batchId",(req:Request,res:Response)=>{
+  
+ 
+  
+  let studentId=parseInt(req.params.studentId);
+  let batchId = parseInt(req.params.batchId)
+
+  if(isNaN(studentId)){
+
+      return res.status(403).send({
+        error: "Student Id is not a valid number"
+      });
+    
+  }
+  if(isNaN(batchId)){
+
+    return res.status(403).send({
+      error: "Student Id is not a valid number"
+    });
+  
+  }
+
+  Student.findById(studentId).then((student:any)=>{
+    student.addBatches(batchId).then((studentbatch:any)=>{
+        console.log(studentbatch)
+        res.status(200).send(studentbatch)
+    })
+  })
+
+})
+
 
 
 

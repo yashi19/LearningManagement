@@ -13,6 +13,10 @@ exports.Batch = exports.db.define("batch", {
     name: {
         type: sequelize_1.default.STRING(30),
         allowNull: false
+    },
+    startDate: {
+        type: sequelize_1.default.DATE,
+        allowNull: false
     }
 });
 exports.Lecture = exports.db.define("lecture", {

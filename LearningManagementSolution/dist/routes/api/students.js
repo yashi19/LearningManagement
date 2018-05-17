@@ -34,7 +34,9 @@ route.get("/:id", (req, res) => {
             error: "Student Id is not a valid number"
         });
     }
-    db_1.Student.findById(studentId)
+    db_1.Student.findById(studentId, {
+        include: [{ all: true }]
+    })
         .then((student) => {
         if (!student) {
             return res.status(500).send("No such student found");
@@ -79,6 +81,26 @@ route.get("/:id/batches", (req, res) => {
         else {
             res.status(200).send(student.batches);
         }
+    });
+});
+route.post("/:studentId/batches/:batchId", (req, res) => {
+    let studentId = parseInt(req.params.studentId);
+    let batchId = parseInt(req.params.batchId);
+    if (isNaN(studentId)) {
+        return res.status(403).send({
+            error: "Student Id is not a valid number"
+        });
+    }
+    if (isNaN(batchId)) {
+        return res.status(403).send({
+            error: "Student Id is not a valid number"
+        });
+    }
+    db_1.Student.findById(studentId).then((student) => {
+        student.addBatches(batchId).then((studentbatch) => {
+            console.log(studentbatch);
+            res.status(200).send(studentbatch);
+        });
     });
 });
 exports.default = route;

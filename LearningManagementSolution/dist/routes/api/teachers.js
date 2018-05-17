@@ -4,7 +4,11 @@ const express_1 = require("express");
 const db_1 = require("../../db");
 const route = express_1.Router();
 route.get("/", (req, res) => {
-    db_1.Teacher.findAll()
+    db_1.Teacher.findAll({
+        include: [
+            { model: db_1.Subject }
+        ]
+    })
         .then((teachers) => {
         res.status(200).send(teachers);
     })
@@ -22,20 +26,24 @@ route.post("/", (req, res) => {
         });
     }
     db_1.Subject.findById(subjectId).then(subject => {
-        if (!subject)
+        if (!subject) {
             return res.status(500).send("No Subject is present with id " + subjectId);
-        db_1.Teacher.create({
-            name: req.body.name,
-            subjectId: subjectId
-        })
-            .then((teacher) => {
-            res.status(201).send(teacher);
-        })
-            .catch((error) => {
-            res.status(501).send({
-                error: "Error adding teacher"
+        }
+        else {
+            db_1.Teacher.create({
+                name: req.body.name,
+            })
+                .then((teacher) => {
+                teacher.setSubject(subject, { save: false });
+                teacher.save();
+                res.status(201).send(teacher);
+            })
+                .catch((error) => {
+                res.status(501).send({
+                    error: "Error adding teacher"
+                });
             });
-        });
+        }
     });
 });
 route.get("/:id", (req, res) => {

@@ -13,6 +13,8 @@
  app.use(express.urlencoded({extended:true}));
 
  app.use('/',apiRoutes);
+ app.use("/", express.static(path.join(__dirname, "/frontend/dist/")));
+
 
  app.use((req:Request,res:Response)=>{
      res.status(404).send('Not Found');

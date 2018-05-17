@@ -4,7 +4,7 @@ const express_1 = require("express");
 const db_1 = require("../../db");
 const route = express_1.Router();
 route.get("/", (req, res) => {
-    db_1.Subject.findAll()
+    db_1.Subject.findAll({ include: [{ model: db_1.Course }] })
         .then((subjects) => {
         res.status(200).send(subjects);
     })
@@ -14,25 +14,23 @@ route.get("/", (req, res) => {
         });
     });
 });
-route.post("/", (req, res) => {
-    let subjectId = parseInt(req.params.id);
-    if (isNaN(subjectId)) {
-        return res.status(403).send({
-            error: 'Subject Id is not a valid number'
-        });
-    }
-    db_1.Subject.findById(subjectId, {
-        include: [{ model: db_1.Course }]
-    })
-        .then((subject) => {
-        if (!subject) {
-            return res.status(500).send("No such subject found");
+route.post('/', (req, res) => {
+    let courseId = parseInt(req.body.courseId);
+    db_1.Course.findOne({
+        where: { id: courseId }
+    }).then(course => {
+        if (!course) {
+            res.status(400).send('course not found');
         }
-        res.status(200).send(subject);
-    })
-        .catch((error) => {
-        res.status(500).send("Error finding subject");
-    });
+        else {
+            db_1.Subject.create({ name: req.body.name }).then((subject) => {
+                subject.setCourse(course, { save: false });
+                subject.save();
+            }).then((subject) => {
+                res.send(subject);
+            });
+        }
+    }).catch((err) => res.send("server error"));
 });
 route.get('/:id/teachers', (req, res) => {
     let subjectId = parseInt(req.params.id);

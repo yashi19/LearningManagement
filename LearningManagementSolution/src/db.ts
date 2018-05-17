@@ -21,6 +21,10 @@ export const Batch = db.define<BatchModel,any>("batch", {
   name: {
     type: Sequelize.STRING(30),
     allowNull: false
+  },
+  startDate:{
+    type:Sequelize.DATE,
+    allowNull:false
   }
 });
 
